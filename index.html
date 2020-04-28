@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing Electron</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <script type="text/javascript" src="./node_modules/jquery/dist/jquery.min.js" ></script>
+</head>
+<body>
+    <script src="renderer.js"></script>
+    <button id="loaddemo">click to load demo</button><br>
+    <select id="players"></select><br><br>
+    <button id="gethighlights" disabled="1">get highlights</button>
+    <select disabled="1" id="highlights" value="no highlight available"></select>
+</body>
+</html>
