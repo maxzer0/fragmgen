@@ -18,14 +18,12 @@ window.onload = function () { // Wait for the app to load before getting the but
 }
 
 window.ipcRenderer.on('header', function (event, data) {
-    //TODO: need to check for duplicate players.....
-    let name,guid;
-    name = data["name"];
-    guid = data["guid"];
 
-    if (!data['fakePlayer']) { // Remove any bots
-        $('#players').append(new Option(name, guid));
-    }
+    data.forEach( function (x) { // uses the array to assign the selector menu.
+        $('#players').append(new Option(x.name, x.guid));
+    })
+
+
 
     $('#loaddemo').prop('disabled', true);
     $('#gethighlights').prop('disabled', false);
