@@ -4,6 +4,7 @@ window.onload = function () { // Wait for the app to load before getting the but
     loaddemo.addEventListener('click', (e) => {
         e.preventDefault();
         window.ipcRenderer.send("loaddemo");
+        $('#loaddemo').prop('disabled', true);
     });
 
 
@@ -17,16 +18,27 @@ window.onload = function () { // Wait for the app to load before getting the but
 
 }
 
+window.ipcRenderer.on('error', function (event, data)  {
+    $('#error').text(data);
+    console.log("yes")
+})
+
+
+
+
+
 window.ipcRenderer.on('header', function (event, data) {
+    if (!(data === 35)) {
+        data.forEach( function (x) { // uses the array to assign the selector menu.
+            $('#players').append(new Option(x.name, x.guid));
+        })
 
-    data.forEach( function (x) { // uses the array to assign the selector menu.
-        $('#players').append(new Option(x.name, x.guid));
-    })
+        $('#loaddemo').prop('disabled', true);
+        $('#gethighlights').prop('disabled', false);
+    } else {
+        $('#loaddemo').prop('disabled', false);
+    }
 
-
-
-    $('#loaddemo').prop('disabled', true);
-    $('#gethighlights').prop('disabled', false);
 
 });
 

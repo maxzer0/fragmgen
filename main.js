@@ -27,8 +27,13 @@ app.whenReady().then(createWindow);
 
 //Gets all the players...
 ipcMain.on('loaddemo', function (event) {
-    try {
-        fs.readFile("testdemo.dem", (err, buffer) => {
+
+    process.once('uncaughtException', function (error) {
+        event.sender.send("error", error)
+        event.sender.send("header", 35);
+    })
+
+    fs.readFile("testdem4o.dem", (err, buffer) => {
             const cdemoFile = new demofile.DemoFile();
             let playerList = [];
 
@@ -69,15 +74,12 @@ ipcMain.on('loaddemo', function (event) {
             });
             cdemoFile.parse(buffer);
         });
-    } catch (error) {
-        event.sender.send("header", error)
-    }
 
 
 })
 
 //Gets all the highlights
-ipcMain.on('gethighlights', function (event, arg) {
+ipcMain.once('gethighlights', function (event, arg) {
     fs.readFile("testdemo.dem", (err,buffer) => {
         const cdemoFile = new demofile.DemoFile();
         let kills = 0;
