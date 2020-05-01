@@ -20,7 +20,6 @@ window.onload = function () { // Wait for the app to load before getting the but
 
 window.ipcRenderer.on('error', function (event, data)  {
     $('#error').text(data);
-    console.log("yes")
 })
 
 
@@ -29,8 +28,9 @@ window.ipcRenderer.on('error', function (event, data)  {
 
 window.ipcRenderer.on('header', function (event, data) {
     if (!(data === 35)) {
-        data.forEach( function (x) { // uses the array to assign the selector menu.
-            $('#players').append(new Option(x.name, x.guid));
+        data.forEach( function (x) { // uses the array to assign the selector menu.$
+            let s64 = new window.SteamID(x.guid);
+            $('#players').append(new Option(x.name, s64.getSteamID64()));
         })
 
         $('#loaddemo').prop('disabled', true);

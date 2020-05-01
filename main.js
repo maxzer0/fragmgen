@@ -2,6 +2,8 @@ const fs = require("fs");
 const demofile = require("demofile");
 const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require("path");
+const csPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\";
+
 
 function createWindow() {
     let win = new BrowserWindow({
@@ -33,7 +35,7 @@ ipcMain.on('loaddemo', function (event) {
         event.sender.send("header", 35);
     })
 
-    fs.readFile("testdem4o.dem", (err, buffer) => {
+    fs.readFile("testdemo.dem", (err, buffer) => {
             const cdemoFile = new demofile.DemoFile();
             let playerList = [];
 
@@ -135,5 +137,53 @@ app.on('window-all-closed', () => {
         app.quit()
     }
 })
+
+// Launch CSGO function
+
+function launchCS() {
+    var child = require('child_process').execFile;
+    var executablePath = "hlae.exe"
+    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console\""];
+
+    child(executablePath, parameters, function(err, data) {
+        console.log(err)
+        console.log(data.toString());
+    });
+}
+
+function writeCFG(demo,startTick, player, recordPath) {
+    // player is the SteamID64
+    let content;
+
+    content += "exec moviecrosshair.cfg" // Set the movie viewmodel + crosshair.
+
+    // Start the demo and send it to the tick where the highlight starts.
+    content += "playdemo" + demo
+    content += "demo_goto" + startTick + "0 1"
+    // Setup the killfeed
+    content += "mirv_deathmsg filter clear"
+    content += "mirv_deathmsg filter add attackerMatch=!x" + player + " victimMatch=!xXUID block=1 lastRule=1"
+    content += "mirv_deathmsg localPlayer" + player
+    content += "mirv_deathmsg lifeTime 60"
+    content += "mirv_deathmsg lifeTimeMod 1.0"
+
+    // Setup the recording feed.
+    content += "exec afx/updateworkaround"  // Adds 4 streams to record.
+    content += "mirv_streams remove myDepthWorld"
+    content += "mirv_streams record cam enabled 1"
+    content += "mirv_streams record format tga"
+    content += "mirv_streams record name \"F:\\Projects\\unfinished\\fregmovie lvl10\\foldername\""
+    content += ""
+
+
+    try {
+        fs.writeFile (csPath + "cfg\\customDemo.cfg", content, 'utf-8');
+    } catch (e) {
+        console.log(e)
+    }
+
+}
+
+
 
 
