@@ -15,9 +15,21 @@ window.onload = function () { // Wait for the app to load before getting the but
         window.ipcRenderer.send("gethighlights", uid, name);
     });
 
+    let launch = document.getElementById('launchcsgo');
+    launch.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.ipcRenderer.send("launchcsgo");
+    });
+
 
 }
 
+
+/* Error checker
+    Codes:
+    35 = "Failed to parse demo"
+
+ */
 window.ipcRenderer.on('error', function (event, data)  {
     $('#error').text(data);
 })

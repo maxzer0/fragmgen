@@ -2,6 +2,7 @@ const fs = require("fs");
 const demofile = require("demofile");
 const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require("path");
+const http = require('http');
 const csPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\";
 
 
@@ -138,12 +139,71 @@ app.on('window-all-closed', () => {
     }
 })
 
+
+ipcMain.on('launchcsgo', function (event) {
+    /*
+        Launch a local webserver that gets the incoming game state data
+     */
+    const port = 3000;
+    const host = '127.0.0.1';
+
+    const server = http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+
+        let eventInfo = '';
+
+        req.on('data', (data) => {
+            console.log(JSON.parser(data)); // TODO: Actually check the data and do something with it....
+        });
+
+        req.on('end', () => {
+            if (eventInfo !== '') {
+                console.log(eventInfo);
+            }
+
+            res.end('');
+        });
+    });
+
+    server.listen(port, host);
+
+    // TODO: Implement listening telnet connection onto CSGO
+    launchCS();
+})
+
+/**
+ * Helper function to read values under nested paths from objects - ripped from tsuriga/csgo-gsi-qsguide
+ *
+ * @param {object} container - Object container
+ * @param {string} propertyPath - Path to the property in the container
+ *                                separated by dots, e.g. 'map.phase'
+ * @return {mixed} Null if the object has no requested property, property value
+ *                 otherwise
+ */
+function readProperty(container, propertyPath) {
+    let value = null;
+    const properties = propertyPath.split('.');
+
+    for (const p of properties) {
+        if (!container.hasOwnProperty(p)) {
+            return null;
+        }
+
+        value = container[p];
+        container = container[p];
+    }
+
+    return value;
+}
+
+
+
 // Launch CSGO function
 
-function launchCS() { // TODO: Need to test this.
+function launchCS() {
     var child = require('child_process').execFile;
-    var executablePath = "hlae.exe"
-    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console\""];
+    var executablePath = path.join(__dirname, 'hlae/HLAE.exe');
+    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"" + csPath + "csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console\""];
 
     child(executablePath, parameters, function(err, data) {
         console.log(err)
@@ -151,14 +211,24 @@ function launchCS() { // TODO: Need to test this.
     });
 }
 
+/* Writing a temporary config.
+    @param {string} demo - path to the demo
+    @param {int} startTick - when does the highlight start
+    @param {string} player - the player's steam64ID
+    @param {string} recordPath - where will we save our stuff.
+
+ */
+
 function writeCFG(demo,startTick, player, recordPath) { //TODO: This function is still incomplete.
-    // player is the SteamID64
+
     let content;
 
     content += "exec moviecrosshair.cfg" // Set the movie viewmodel + crosshair.
 
     // Start the demo and send it to the tick where the highlight starts.
+    content += "echo \"Starting demofile " + demo + "\""
     content += "playdemo" + demo
+    content += "echo \"Going to tick " + startTick "\""
     content += "demo_goto" + startTick + "0 1"
     // Setup the killfeed
     content += "mirv_deathmsg filter clear"
@@ -169,10 +239,10 @@ function writeCFG(demo,startTick, player, recordPath) { //TODO: This function is
 
     // Setup the recording feed.
     content += "exec afx/updateworkaround"  // Adds 4 streams to record.
-    content += "mirv_streams remove myDepthWorld"
-    content += "mirv_streams record cam enabled 1"
+    content += "mirv_streams remove myDepthWorld" // I don't need this stream yet.
+    content += "mirv_streams record cam enabled 1" // Record the camera track, not sure if need
     content += "mirv_streams record format tga"
-    content += "mirv_streams record name \"F:\\Projects\\unfinished\\fregmovie lvl10\\foldername\"" // TODO: Change this once you get the concept working.
+    content += "mirv_streams record name \"F:\\Projects\\unfinished\\fregmovie lvl10\\foldername\"" // TODO: Make this dynamic, once you get the concept working.
     content += ""
 
 

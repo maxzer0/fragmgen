@@ -2,3 +2,6 @@
 /node_modules/
 #Do not upload the demos to git ;)
 *.dem
+
+# Do not upload HLAE/MIRV to git
+/hlae/
