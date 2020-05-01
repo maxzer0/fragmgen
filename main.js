@@ -140,7 +140,7 @@ app.on('window-all-closed', () => {
 
 // Launch CSGO function
 
-function launchCS() {
+function launchCS() { // TODO: Need to test this.
     var child = require('child_process').execFile;
     var executablePath = "hlae.exe"
     var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console\""];
@@ -151,7 +151,7 @@ function launchCS() {
     });
 }
 
-function writeCFG(demo,startTick, player, recordPath) {
+function writeCFG(demo,startTick, player, recordPath) { //TODO: This function is still incomplete.
     // player is the SteamID64
     let content;
 
@@ -172,7 +172,7 @@ function writeCFG(demo,startTick, player, recordPath) {
     content += "mirv_streams remove myDepthWorld"
     content += "mirv_streams record cam enabled 1"
     content += "mirv_streams record format tga"
-    content += "mirv_streams record name \"F:\\Projects\\unfinished\\fregmovie lvl10\\foldername\""
+    content += "mirv_streams record name \"F:\\Projects\\unfinished\\fregmovie lvl10\\foldername\"" // TODO: Change this once you get the concept working.
     content += ""
 
 
