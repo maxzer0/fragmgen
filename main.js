@@ -4,6 +4,7 @@ const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require("path");
 const http = require('http');
 const csPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\";
+const json = require('json');
 
 
 function createWindow() {
@@ -82,7 +83,10 @@ ipcMain.on('loaddemo', function (event) {
 })
 
 //Gets all the highlights
-ipcMain.once('gethighlights', function (event, arg) {
+ipcMain.on('gethighlights', function (event, arg) {
+
+    let highlights = [];
+
     fs.readFile("testdemo.dem", (err,buffer) => {
         const cdemoFile = new demofile.DemoFile();
         let kills = 0;
@@ -90,6 +94,7 @@ ipcMain.once('gethighlights', function (event, arg) {
         let team;
         let cname;
         let currentRound;
+
 
         cdemoFile.gameEvents.on("round_start", () => {
                 currentRound = cdemoFile.gameRules.roundsPlayed;
@@ -103,7 +108,7 @@ ipcMain.once('gethighlights', function (event, arg) {
 
                     if (attacker.steamId == arg) {
                         cname = attacker.name
-                        ctick = cdemoFile.currentTick - 500; // Abit before the first kill.
+                        ctick = cdemoFile.currentTick - 600; // Abit before the first kill.
 
                         if (attacker.teamNumber === 2) { // Lazy check, could be done better, but you shouldn't be able to kill as unassigned/spec.
                             team = "T"
@@ -119,16 +124,21 @@ ipcMain.once('gethighlights', function (event, arg) {
         cdemoFile.gameEvents.on("round_officially_ended", () => {
             if (!cdemoFile.gameRules.isWarmup) { //TODO: Feel like there's a better solution for this....
                 if (kills > 0) { // Checks if there's a kill available, since we're only counting the one persons kills, we should be fine;
-                    console.log(`${cname} ${kills}K ${team}`)
-                    console.log( `Round : ${currentRound + 1}`);
+                    highlights.push({round: currentRound + 1, kills: kills, team: team, demotick: ctick});
                 }
 
                 kills = 0;
             }
+
+        })
+
+        cdemoFile.on("end", () => {
+            event.sender.send("highlightback", highlights)
         })
 
         cdemoFile.parse(buffer);
     });
+
 
 })
 
@@ -152,8 +162,8 @@ ipcMain.on('launchcsgo', function (event) {
 
         let eventInfo = '';
 
-        req.on('data', (data) => {
-            console.log(JSON.parser(data)); // TODO: Actually check the data and do something with it....
+        req.on('data', (data) => { // TODO: Actually check the data and do something with it....
+            console.log(JSON.parse(data).allplayers['76561198009704140'].state.round_kills); // Check the amount of kills our highlight player has =)
         });
 
         req.on('end', () => {
@@ -170,6 +180,8 @@ ipcMain.on('launchcsgo', function (event) {
     // TODO: Implement listening telnet connection onto CSGO
     launchCS();
 })
+
+
 
 /**
  * Helper function to read values under nested paths from objects - ripped from tsuriga/csgo-gsi-qsguide
@@ -228,8 +240,9 @@ function writeCFG(demo,startTick, player, recordPath) { //TODO: This function is
     // Start the demo and send it to the tick where the highlight starts.
     content += "echo \"Starting demofile " + demo + "\""
     content += "playdemo" + demo
-    content += "echo \"Going to tick " + startTick "\""
+    content += "echo \"Going to tick " + startTick + "\""
     content += "demo_goto" + startTick + "0 1"
+
     // Setup the killfeed
     content += "mirv_deathmsg filter clear"
     content += "mirv_deathmsg filter add attackerMatch=!x" + player + " victimMatch=!xXUID block=1 lastRule=1"

@@ -11,8 +11,10 @@ window.onload = function () { // Wait for the app to load before getting the but
     let highlights = document.getElementById('gethighlights');
     highlights.addEventListener('click', (e) => {
         e.preventDefault();
-        let uid = document.getElementById('players').value;
-        window.ipcRenderer.send("gethighlights", uid, name);
+        let s32 = new window.SteamID(document.getElementById('players').value).getSteam2RenderedID(true);
+        console.log(s32);
+        window.ipcRenderer.send("gethighlights", s32, name);
+        $('#gethighlights').prop('disabled', true);
     });
 
     let launch = document.getElementById('launchcsgo');
@@ -28,6 +30,7 @@ window.onload = function () { // Wait for the app to load before getting the but
 /* Error checker
     Codes:
     35 = "Failed to parse demo"
+    36 = "Failed to get highlights"
 
  */
 window.ipcRenderer.on('error', function (event, data)  {
@@ -41,7 +44,7 @@ window.ipcRenderer.on('error', function (event, data)  {
 window.ipcRenderer.on('header', function (event, data) {
     if (!(data === 35)) {
         data.forEach( function (x) { // uses the array to assign the selector menu.$
-            let s64 = new window.SteamID(x.guid);
+            let s64 = new window.SteamID(x.guid); //Convert SteamID2 to SteamID64 for mirv_deathmsg
             $('#players').append(new Option(x.name, s64.getSteamID64()));
         })
 
@@ -57,6 +60,24 @@ window.ipcRenderer.on('header', function (event, data) {
 window.ipcRenderer.on('test', function (event, data) {
 
 });
+
+window.ipcRenderer.on('highlightback', function (event, data) {
+
+    if (!(data === 36)) {
+        data.forEach( function (x) { // uses the array to assign the selector menu.$
+            $('#highlights').append(new Option(`Round: ${x.round}, ${x.kills}K on ${x.team}`, x.demotick));
+        })
+
+        $('#gethighlights').prop('disabled', true); // don't need to retrieve highlights after we've done it once.
+        $('#players').prop('disabled', true);
+
+        $('#highlights').prop('disabled', false);
+    } else {
+        $('#gethighlights').prop('disabled', false); // if we failed allow to try again
+    }
+
+});
+
 
 
 
