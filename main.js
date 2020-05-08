@@ -4,7 +4,7 @@ const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require("path");
 const http = require('http');
 const csPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\";
-const json = require('json');
+const Telnet = require('telnet-client')
 
 
 function createWindow() {
@@ -159,11 +159,41 @@ ipcMain.on('launchcsgo', function (event) {
 
     const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-
+        let firstS = false;
         let eventInfo = '';
 
         req.on('data', (data) => { // TODO: Actually check the data and do something with it....
-            console.log(JSON.parse(data).allplayers['76561198009704140'].state.round_kills); // Check the amount of kills our highlight player has =)
+            if (!firstS) {// TODO: Implement listening telnet connection onto CSGO
+                let telnetc = new Telnet();
+
+                let telnetp = { //TODO: Telnet connection is not working yet....
+                    host: '127.0.0.1',
+                    port: 2121,
+                    timeout: 1500
+                }
+
+                try {
+                    telnetc.connect(telnetp)
+                } catch (error) {
+                    console.log(error);
+                }
+                firstS = true;
+            }
+
+            try {
+                JSON.parse(data).allplayers['76561198009704140'].state.round_kills;
+                if( JSON.parse(data).allplayers['76561198009704140'].state.round_kills === 2) {
+                    console.log("we got the kills")
+                    console.log("killing the game in 2 secs");
+                    setTimeout( function ()  {
+                        console.log("killing the game now");
+                        telnetc.exec("quit");
+                    }, 2000);
+                } // Check the amount of kills our highlight player has =)
+            } catch (error) {
+                console.log(error);
+            }
+
         });
 
         req.on('end', () => {
@@ -177,8 +207,11 @@ ipcMain.on('launchcsgo', function (event) {
 
     server.listen(port, host);
 
-    // TODO: Implement listening telnet connection onto CSGO
+
     launchCS();
+
+
+
 })
 
 
@@ -215,7 +248,7 @@ function readProperty(container, propertyPath) {
 function launchCS() {
     var child = require('child_process').execFile;
     var executablePath = path.join(__dirname, 'hlae/HLAE.exe');
-    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"" + csPath + "csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console\""];
+    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"" + csPath + "csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console -netconport 2121\""];
 
     child(executablePath, parameters, function(err, data) {
         console.log(err)
