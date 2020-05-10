@@ -157,19 +157,22 @@ ipcMain.on('launchcsgo', function (event) {
     const port = 3000;
     const host = '127.0.0.1';
 
+    let telnetc = new Telnet(); // Create a new telnet client to refer to later.
+
     const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         let firstS = false;
         let eventInfo = '';
 
         req.on('data', (data) => { // TODO: Actually check the data and do something with it....
-            if (!firstS) {// TODO: Implement listening telnet connection onto CSGO
-                let telnetc = new Telnet();
+            if (!firstS) {// Only connect to CSGO once after the gamestate integration is launched.
 
-                let telnetp = { //TODO: Telnet connection is not working yet....
+
+                let telnetp = {
                     host: '127.0.0.1',
                     port: 2121,
-                    timeout: 1500
+                    timeout: 1500,
+                    negotiationMandatory: false
                 }
 
                 try {
@@ -248,8 +251,7 @@ function readProperty(container, propertyPath) {
 function launchCS() {
     var child = require('child_process').execFile;
     var executablePath = path.join(__dirname, 'hlae/HLAE.exe');
-    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"" + csPath + "csgo.exe\"", "-mmcfgEnabled true", "-mmcfg \"C:\\Users\\Username\\Desktop\\mmcfg\"", "-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-console -netconport 2121\""];
-
+    var parameters = ["-csgoLauncher", "-noGui", "-autoStart", "-csgoExe \"" + csPath + "csgo.exe\"","-gfxEnabled true", "-gfxWidth 1920", "-gfxHeight 1080", "-gfxFull false", "-customLaunchOptions \"-netconport 2121 -novid -console \""];
     child(executablePath, parameters, function(err, data) {
         console.log(err)
         console.log(data.toString());
