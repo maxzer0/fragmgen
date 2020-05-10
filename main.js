@@ -110,11 +110,8 @@ ipcMain.on('gethighlights', function (event, arg) {
                         cname = attacker.name
                         ctick = cdemoFile.currentTick - 600; // Abit before the first kill.
 
-                        if (attacker.teamNumber === 2) { // Lazy check, could be done better, but you shouldn't be able to kill as unassigned/spec.
-                            team = "T"
-                        } else {
-                            team = "CT";
-                        }
+                        team = (attacker.TeamNumber === 2) ? "CT" : "T";  // Lazy check, could be done better, but you shouldn't be able to kill as unassigned/spec.
+
                         kills++;
                     }
                 }

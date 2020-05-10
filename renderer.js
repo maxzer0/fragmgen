@@ -11,7 +11,7 @@ window.onload = function () { // Wait for the app to load before getting the but
     let highlights = document.getElementById('gethighlights');
     highlights.addEventListener('click', (e) => {
         e.preventDefault();
-        let s32 = new window.SteamID(document.getElementById('players').value).getSteam2RenderedID(true);
+        let s32 = new window.SteamID(document.getElementById('players').value).getSteam2RenderedID(true); // Convert it to STEAMID32
         console.log(s32);
         window.ipcRenderer.send("gethighlights", s32, name);
         $('#gethighlights').prop('disabled', true);
@@ -31,9 +31,8 @@ window.onload = function () { // Wait for the app to load before getting the but
     Codes:
     35 = "Failed to parse demo"
     36 = "Failed to get highlights"
-
  */
-window.ipcRenderer.on('error', function (event, data)  {
+window.ipcRenderer.on('error', function (event, data)  { //TODO: Needs to be fleshed out more...
     $('#error').text(data);
 })
 
