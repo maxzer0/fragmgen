@@ -5,7 +5,7 @@ const path = require("path");
 const http = require('http');
 const csPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\";
 const Telnet = require('telnet-client')
-
+var demoPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\csgo\\replays\\match730_003410779876469244136_1917365897_192.dem"
 
 function createWindow() {
     let win = new BrowserWindow({
@@ -37,19 +37,19 @@ ipcMain.on('loaddemo', function (event) {
         event.sender.send("header", 35);
     })
 
-    fs.readFile("testdemo.dem", (err, buffer) => {
+    fs.readFile(demoPath, (err, buffer) => {
             const cdemoFile = new demofile.DemoFile();
             let playerList = [];
 
 
             cdemoFile.stringTables.on("update", (e) => {
-
                 if (e.table.name === "userinfo" && e.userData != null) {
                     if (!e.userData.fakePlayer) { // Check if it's any GOTV "players"
+                        playerList.push(e.userData)
                         if (playerList.length >= 1) {
                             let dup = false;
                             for (let i = 0; i < playerList.length; i++) {
-                                if (playerList[i].name === e.userData.name) { // If you don't have a duplicate, append it to the list.
+                                if (!(playerList[i].name === e.userData.name)) { // If you don't have a duplicate, append it to the list.
                                     dup = true;
                                     break;
                                 }
@@ -57,12 +57,8 @@ ipcMain.on('loaddemo', function (event) {
                             if (!dup) { // Non-duplicate names get added.
                                 playerList.push(e.userData)
                             }
-
                         }
 
-                        if (playerList.length === 0) { // If we ain't have got anything, let's not check for anything
-                            playerList.push(e.userData)
-                        }
                     }
 
                     if (playerList.length === 10) { // Once we have 10 players with this list cancel.
@@ -87,7 +83,7 @@ ipcMain.on('gethighlights', function (event, arg) {
 
     let highlights = [];
 
-    fs.readFile("testdemo.dem", (err,buffer) => {
+    fs.readFile(demoPath, (err,buffer) => {
         const cdemoFile = new demofile.DemoFile();
         let kills = 0;
         let ctick;
@@ -103,8 +99,6 @@ ipcMain.on('gethighlights', function (event, arg) {
         cdemoFile.gameEvents.on("player_death", e => {
                 if (!cdemoFile.gameRules.isWarmup) { // Count kills not in warmup.
                     const attacker = cdemoFile.entities.getByUserId(e.attacker);
-
-
 
                     if (attacker.steamId == arg) {
                         cname = attacker.name
@@ -130,7 +124,7 @@ ipcMain.on('gethighlights', function (event, arg) {
         })
 
         cdemoFile.on("end", () => {
-            event.sender.send("highlightback", highlights)
+            event.sender.send("return-highlights", highlights)
         })
 
         cdemoFile.parse(buffer);
@@ -148,6 +142,8 @@ app.on('window-all-closed', () => {
 
 
 ipcMain.on('launchcsgo', function (event) {
+
+    writeCFG(demofile, )
     /*
         Launch a local webserver that gets the incoming game state data
      */
@@ -163,7 +159,6 @@ ipcMain.on('launchcsgo', function (event) {
 
         req.on('data', (data) => { // TODO: Actually check the data and do something with it....
             if (!firstS) {// Only connect to CSGO once after the gamestate integration is launched.
-
 
                 let telnetp = {
                     host: '127.0.0.1',
@@ -270,12 +265,14 @@ function writeCFG(demo,startTick, player, recordPath) { //TODO: This function is
     content += "exec moviecrosshair.cfg" // Set the movie viewmodel + crosshair.
 
     // Start the demo and send it to the tick where the highlight starts.
+    content += "cl_show_observer_crosshair 0" // Disable spectating player's crosshair
     content += "echo \"Starting demofile " + demo + "\""
     content += "playdemo" + demo
     content += "echo \"Going to tick " + startTick + "\""
     content += "demo_goto" + startTick + "0 1"
 
     // Setup the killfeed
+    content += "spec_player_by_accountid" + player
     content += "mirv_deathmsg filter clear"
     content += "mirv_deathmsg filter add attackerMatch=!x" + player + " victimMatch=!xXUID block=1 lastRule=1"
     content += "mirv_deathmsg localPlayer" + player

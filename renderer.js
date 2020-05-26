@@ -11,9 +11,7 @@ window.onload = function () { // Wait for the app to load before getting the but
     let highlights = document.getElementById('gethighlights');
     highlights.addEventListener('click', (e) => {
         e.preventDefault();
-        let s32 = new window.SteamID(document.getElementById('players').value).getSteam2RenderedID(true); // Convert it to STEAMID32
-        console.log(s32);
-        window.ipcRenderer.send("gethighlights", s32, name);
+        window.ipcRenderer.send("gethighlights", $('#players').data('steamid2'), name);
         $('#gethighlights').prop('disabled', true);
     });
 
@@ -44,7 +42,9 @@ window.ipcRenderer.on('header', function (event, data) {
     if (!(data === 35)) {
         data.forEach( function (x) { // uses the array to assign the selector menu.$
             let s64 = new window.SteamID(x.guid); //Convert SteamID2 to SteamID64 for mirv_deathmsg
-            $('#players').append(new Option(x.name, s64.getSteamID64()));
+            $('#players').data('steamid2', x.guid);
+            $('#players').data('steamid64',s64.getSteamID64())
+            $('#players').append(new Option(x.name));
         })
 
         $('#loaddemo').prop('disabled', true);
@@ -60,7 +60,7 @@ window.ipcRenderer.on('test', function (event, data) {
 
 });
 
-window.ipcRenderer.on('highlightback', function (event, data) {
+window.ipcRenderer.on('return-highlights', function (event, data) {
 
     if (!(data === 36)) {
         data.forEach( function (x) { // uses the array to assign the selector menu.$
