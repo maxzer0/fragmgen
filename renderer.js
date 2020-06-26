@@ -1,6 +1,6 @@
 
 window.onload = function () { // Wait for the app to load before getting the button.
-    let loaddemo = document.getElementById('loaddemo');
+    let loaddemo = document.getElementById('loaddemo'); // Retrieve demo button
     loaddemo.addEventListener('click', (e) => {
         e.preventDefault();
         window.ipcRenderer.send("loaddemo");
@@ -9,9 +9,9 @@ window.onload = function () { // Wait for the app to load before getting the but
 
 
     let highlights = document.getElementById('gethighlights');
-    highlights.addEventListener('click', (e) => {
+    highlights.addEventListener('click', (e) => { // Retrieve player highlights
         e.preventDefault();
-        window.ipcRenderer.send("gethighlights", $('#players').data('steamid2'), name);
+        window.ipcRenderer.send("gethighlights", $('#players').data($('#players').val()), name);
         $('#gethighlights').prop('disabled', true);
     });
 
@@ -25,7 +25,7 @@ window.onload = function () { // Wait for the app to load before getting the but
 }
 
 
-/* Error checker
+/* Error checker function, TODO: Replace with native error handling (?)
     Codes:
     35 = "Failed to parse demo"
     36 = "Failed to get highlights"
@@ -42,8 +42,7 @@ window.ipcRenderer.on('header', function (event, data) {
     if (!(data === 35)) {
         data.forEach( function (x) { // uses the array to assign the selector menu.$
             let s64 = new window.SteamID(x.guid); //Convert SteamID2 to SteamID64 for mirv_deathmsg
-            $('#players').data('steamid2', x.guid);
-            $('#players').data('steamid64',s64.getSteamID64())
+            $('#players').data(x.name, {steamid64: s64.getSteamID64(), steamid2: x.guid});
             $('#players').append(new Option(x.name));
         })
 

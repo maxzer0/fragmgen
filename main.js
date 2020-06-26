@@ -43,13 +43,13 @@ ipcMain.on('loaddemo', function (event) {
 
 
             cdemoFile.stringTables.on("update", (e) => {
-                if (e.table.name === "userinfo" && e.userData != null) {
-                    if (!e.userData.fakePlayer) { // Check if it's any GOTV "players"
+                if (e.table.name === "userinfo" && e.userData != null) { // If we're getting user data, try to interpret it.
+                    if ( (! e.userData.fakePlayer) && e.userData.guid !== 'BOT' ) { // Check if it's any GOTV "players" and if they have a valid steamID ;)
                         playerList.push(e.userData)
                         if (playerList.length >= 1) {
                             let dup = false;
-                            for (let i = 0; i < playerList.length; i++) {
-                                if (!(playerList[i].name === e.userData.name)) { // If you don't have a duplicate, append it to the list.
+                            for (let i = 0; i < playerList.length; i++) { //TODO: I feel like this is pretty inefficient and there's probably a better way to do this =)
+                                if (!(playerList[i].name === e.userData.name)) { // If you aren't a duplicate, append it to the list.
                                     dup = true;
                                     break;
                                 }
@@ -80,7 +80,6 @@ ipcMain.on('loaddemo', function (event) {
 
 //Gets all the highlights
 ipcMain.on('gethighlights', function (event, arg) {
-
     let highlights = [];
 
     fs.readFile(demoPath, (err,buffer) => {
@@ -97,10 +96,11 @@ ipcMain.on('gethighlights', function (event, arg) {
         })
 
         cdemoFile.gameEvents.on("player_death", e => {
-                if (!cdemoFile.gameRules.isWarmup) { // Count kills not in warmup.
+                if (! cdemoFile.gameRules.isWarmup) { // Count kills not in warmup.
                     const attacker = cdemoFile.entities.getByUserId(e.attacker);
+                    //TODO: Find some way to handle undefined steamid or else the whole program won't work.
 
-                    if (attacker.steamId == arg) {
+                    if (attacker.steamId === arg.steamid2) {
                         cname = attacker.name
                         ctick = cdemoFile.currentTick - 600; // Abit before the first kill.
 
@@ -109,7 +109,6 @@ ipcMain.on('gethighlights', function (event, arg) {
                         kills++;
                     }
                 }
-
         });
 
         cdemoFile.gameEvents.on("round_officially_ended", () => {
@@ -143,7 +142,7 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('launchcsgo', function (event) {
 
-    writeCFG(demofile, )
+    writeCFG(demoPath, )
     /*
         Launch a local webserver that gets the incoming game state data
      */
